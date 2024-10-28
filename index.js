@@ -2,11 +2,11 @@ const TelegramBot = require('node-telegram-bot-api');
 require('dotenv').config();
 const { addUser, readJsonFile, writeJsonFile } = require('./commands');
 const cron = require("node-cron");
+import route from "./route.js";
 
 const express = require('express');
 const axios = require("axios");
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 const token = process.env.BOT_TOKEN;
 const bot = new TelegramBot(token, {polling: true});
@@ -181,19 +181,18 @@ bot.on('message', (msg) => {
     }
 });
 
-app.get('/ping', (req, res) => {
-    res.send('pong');
-});
+app.use('/', route);
 
 cron.schedule(`5 * * * *`, async () => {
     try {
-        const response = await axios.get('https://water-84u16x98s-vidombaxs-projects.vercel.app/ping');
+        const response = await axios.get(`${process.env.HOST}/ping`);
         console.log(response.data);
     } catch (error) {
         console.error('Cron job failed:', error);
     }
 });
 
+const PORT = process.env.PORT || 5001
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+    console.log(`Server is running on port ${PORT}`)
+})
