@@ -35,8 +35,32 @@ function addUser(newUser) {
     }
 }
 
+function createUsersFile() {
+    if (!fs.existsSync('users.json')) {
+        const example = {
+            users: []
+        };
+
+        const jsonData = JSON.stringify(example);
+        const filePath = path.join(__dirname, 'users.json');
+
+        fs.writeFile(filePath, jsonData, (err) => {
+            if (err) {
+                console.error(err);
+            }
+            else {
+                console.log('JSON файл создан');
+            }
+        });
+    }
+    else {
+        console.log('База есть создавать не нужно');
+    }
+}
+
 module.exports = {
     addUser,
     readJsonFile,
-    writeJsonFile
+    writeJsonFile,
+    createUsersFile
 }

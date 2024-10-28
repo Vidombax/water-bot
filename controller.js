@@ -1,7 +1,7 @@
 class Controller {
-    async ping(req, res) {
-        await res.send('pong');
+    static async ping(req, res) {
+        res.send('pong');
     }
 }
 
-export default new Controller();
+module.exports = Controller;

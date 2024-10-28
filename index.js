@@ -1,8 +1,8 @@
 const TelegramBot = require('node-telegram-bot-api');
 require('dotenv').config();
-const { addUser, readJsonFile, writeJsonFile } = require('./commands');
+const { addUser, readJsonFile, writeJsonFile, createUsersFile } = require('./commands');
 const cron = require("node-cron");
-import route from "./route.js";
+const route = require("./route.js");
 
 const express = require('express');
 const axios = require("axios");
@@ -10,6 +10,8 @@ const app = express();
 
 const token = process.env.BOT_TOKEN;
 const bot = new TelegramBot(token, {polling: true});
+
+createUsersFile();
 
 function sendNotification(isDoubleBottle) {
     const data = readJsonFile();
@@ -183,12 +185,14 @@ bot.on('message', (msg) => {
 
 app.use('/', route);
 
-cron.schedule(`5 * * * *`, async () => {
+cron.schedule(`*/2 * * * *`, async () => {
+    console.log('Запрашиваю пинг сервера...');
     try {
         const response = await axios.get(`${process.env.HOST}/ping`);
-        console.log(response.data);
+        console.log('Ответ:', response.data);
     } catch (error) {
-        console.error('Cron job failed:', error);
+        console.error('Cron job failed:', error.message);
+        console.error('Stack trace:', error.stack);
     }
 });
 
