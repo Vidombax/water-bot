@@ -37,7 +37,7 @@ cron.schedule(`30 6 * * *`, async () => {
     }
 }, { scheduled: true, timezone: 'Europe/Moscow' });
 
-cron.schedule(`* 9 * * *`, async () => {
+cron.schedule(`0 9 * * *`, async () => {
     try {
         await sendNotification(false);
     } catch (error) {
@@ -45,7 +45,7 @@ cron.schedule(`* 9 * * *`, async () => {
     }
 }, { scheduled: true, timezone: 'Europe/Moscow' });
 
-cron.schedule(`* 11 * * *`, async () => {
+cron.schedule(`0 11 * * *`, async () => {
     try {
         await sendNotification(true);
     } catch (error) {
@@ -53,7 +53,7 @@ cron.schedule(`* 11 * * *`, async () => {
     }
 }, { scheduled: true, timezone: 'Europe/Moscow' });
 
-cron.schedule(`* 14 * * *`, async () => {
+cron.schedule(`0 14 * * *`, async () => {
     try {
         await sendNotification(false);
     } catch (error) {
@@ -61,7 +61,7 @@ cron.schedule(`* 14 * * *`, async () => {
     }
 }, { scheduled: true, timezone: 'Europe/Moscow' });
 
-cron.schedule(`* 18 * * *`, async () => {
+cron.schedule(`0 18 * * *`, async () => {
     try {
         await sendNotification(false);
     } catch (error) {
