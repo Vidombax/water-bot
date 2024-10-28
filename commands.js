@@ -16,7 +16,7 @@ function readJsonFile() {
 function writeJsonFile(data) {
     try {
         fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
-        console.log('Пользователь был добавлен');
+        console.log(`Пользователь был обновлен: ${data}`);
     } catch (error) {
         console.error('Error writing JSON file:', error);
     }
@@ -25,11 +25,9 @@ function writeJsonFile(data) {
 function addUser(newUser) {
     const data = readJsonFile();
     if (data.users.length > 0) {
-        for (let i = 0; i < data.users.length; i++) {
-            data.users.push(newUser);
-            writeJsonFile(data);
-            break;
-        }
+        data.users.push(newUser);
+        writeJsonFile(data);
+        console.log(`Пользователь был добавлен: ${data.users}`);
     }
     else {
         data.users.push(newUser);
@@ -39,5 +37,6 @@ function addUser(newUser) {
 
 module.exports = {
     addUser,
-    readJsonFile
+    readJsonFile,
+    writeJsonFile
 }
