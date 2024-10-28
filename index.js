@@ -29,7 +29,7 @@ function sendNotification(isDoubleBottle) {
     }
 }
 
-cron.schedule(`54 13 * * *`, async () => {
+cron.schedule(`30 6 * * *`, async () => {
     try {
         await sendNotification(false);
     } catch (error) {
