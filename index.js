@@ -11,13 +11,15 @@ function sendNotification(isDoubleBottle) {
     let text = '';
     if (isDoubleBottle !== true) {
         for (let i = 0; i < data.users.length; i++) {
-            text = `${data.users[i].name}, пора выпить стакан воды🚰`;
+            const userCup = (data.users[i].weight * 30) / 6;
+            text = `${data.users[i].name}, нужно выпить ${userCup} мл воды!`;
             bot.sendMessage(data.users[i].id, text);
         }
     }
     else {
         for (let i = 0; i < data.users.length; i++) {
-            text = `${data.users[i].name}, пора выпить два стакана воды🚰🚰`;
+            const userCup = (data.users[i].weight * 30) / 6;
+            text = `${data.users[i].name}, нужно выпить ${userCup * 2} мл воды!`;
             bot.sendMessage(data.users[i].id, text);
         }
     }
@@ -83,12 +85,33 @@ bot.on('message', (msg) => {
             }
 
             if (!userFound) {
-                const newUser = {
-                    id: msg.chat.id,
-                    name: msg.chat.first_name,
-                };
-                addUser(newUser);
-                bot.sendMessage(chatId, 'Бот будет отправлять по расписанию сообщение о том, что нужно выпить воды!');
+                bot.sendMessage(chatId, 'Добро пожаловать! Пожалуйста, укажите ваш рост в см:');
+                bot.once('message', (msg) => {
+                    const height = parseInt(msg.text);
+                    if (isNaN(height)) {
+                        bot.sendMessage(chatId, 'Пожалуйста, введите числовое значение для роста.');
+                        return;
+                    }
+
+                    bot.sendMessage(chatId, 'Спасибо! Теперь укажите ваш вес в кг:');
+                    bot.once('message', (msg) => {
+                        const weight = parseInt(msg.text);
+                        if (isNaN(weight)) {
+                            bot.sendMessage(chatId, 'Пожалуйста, введите числовое значение для веса.');
+                            return;
+                        }
+
+                        const newUser = {
+                            id: msg.chat.id,
+                            name: msg.chat.first_name,
+                            height: height,
+                            weight: weight,
+                        };
+                        addUser(newUser);
+                        bot.sendMessage(chatId, `Человеку необходимо пить 30 мл жидкости на 1 кг массы тела, следовательно учитывая ваш вес вы должны пить: ${30 * newUser.weight} мл в день или же ${(30 * newUser.weight) / 1000} л в день.`);
+                        bot.sendMessage(chatId, 'Бот будет отправлять в течении дня напоминания о том, что вам нужно выпить воды, чтобы вы смогли достичь своей суточной нормы жидкости в организме!');
+                    });
+                });
             }
             break;
         case '/about':
