@@ -5,6 +5,7 @@
       "name": "",
       "height": 0,
       "weight": 0,
+      "drankWater": 0,
       "active": true
     }
   ]

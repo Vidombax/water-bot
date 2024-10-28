@@ -14,6 +14,8 @@ function sendNotification(isDoubleBottle) {
             if (data.users[i].active === true) {
                 const userCup = (data.users[i].weight * 30) / 6;
                 text = `${data.users[i].name}, нужно выпить ${userCup} мл воды!`;
+                data.users[i].drankWater += userCup;
+                writeJsonFile(data);
                 bot.sendMessage(data.users[i].id, text);
             }
         }
@@ -23,6 +25,8 @@ function sendNotification(isDoubleBottle) {
             if (data.users[i].active === true) {
                 const userCup = (data.users[i].weight * 30) / 6;
                 text = `${data.users[i].name}, нужно выпить ${userCup * 2} мл воды!`;
+                data.users[i].drankWater += userCup * 2;
+                writeJsonFile(data);
                 bot.sendMessage(data.users[i].id, text);
             }
         }
@@ -73,11 +77,10 @@ cron.schedule(`0 18 * * *`, async () => {
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text;
-
+    const data = readJsonFile();
 
     switch (text) {
         case '/start':
-            const data = readJsonFile();
             let userFound = false;
 
             for (let i = 0; i < data.users.length; i++) {
@@ -118,6 +121,7 @@ bot.on('message', (msg) => {
                             name: msg.chat.first_name,
                             height: height,
                             weight: weight,
+                            drankWater: 0,
                             active: true,
                         };
                         addUser(newUser);
@@ -141,13 +145,12 @@ bot.on('message', (msg) => {
                 '20:00');
             break;
         case '/refuse':
-            const dataUsers = readJsonFile();
             let found = false;
-            for (let i = 0; i < dataUsers.users.length; i++) {
-                if (chatId === dataUsers.users[i].id) {
-                    if (dataUsers.users[i].active === true) {
-                        dataUsers.users[i].active = false;
-                        writeJsonFile(dataUsers);
+            for (let i = 0; i < data.users.length; i++) {
+                if (chatId === data.users[i].id) {
+                    if (data.users[i].active === true) {
+                        data.users[i].active = false;
+                        writeJsonFile(data);
                         bot.sendMessage(chatId, 'Бот больше не будет отправлять вам сообщения');
                     } else {
                         bot.sendMessage(chatId, 'Бот не включен у вас');
@@ -158,6 +161,16 @@ bot.on('message', (msg) => {
             }
             if (!found) {
                 bot.sendMessage(chatId, 'Пользователь не найден');
+            }
+            break;
+        case '/water':
+            for (let i = 0; i < data.users.length; i++) {
+                if (chatId === data.users[i].id) {
+                    bot.sendMessage(chatId, `Вы выпили ${data.users[i].drankWater} мл воды`);
+                }
+                else {
+                    bot.sendMessage(chatId, 'Вы не зарегистрированы в боте: чтобы это сделать выберите команду start в списке!');
+                }
             }
             break;
     }
