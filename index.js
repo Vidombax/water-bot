@@ -1,85 +1,23 @@
 const TelegramBot = require('node-telegram-bot-api');
 require('dotenv').config();
 const { addUser, readJsonFile, writeJsonFile, createUsersFile } = require('./commands');
-const cron = require("node-cron");
-const route = require("./route.js");
+const server = require('./server.js');
+const cron = require('./cron.js');
 
-const express = require('express');
-const axios = require("axios");
-const app = express();
+let token;
 
-const token = process.env.BOT_TOKEN;
+if (process.env.IS_TEST !== 'true') {
+    token = process.env.BOT_TOKEN;
+}
+else {
+    token = process.env.BOT_TOKEN_TEST;
+}
+
 const bot = new TelegramBot(token, {polling: true});
 
 createUsersFile();
-
-function sendNotification(isDoubleBottle) {
-    const data = readJsonFile();
-    let text = '';
-    if (isDoubleBottle !== true) {
-        for (let i = 0; i < data.users.length; i++) {
-            if (data.users[i].active === true) {
-                const userCup = (data.users[i].weight * 30) / 6;
-                text = `${data.users[i].name}, нужно выпить ${userCup} мл воды!`;
-                data.users[i].drankWater += userCup;
-                writeJsonFile(data);
-                bot.sendMessage(data.users[i].id, text);
-            }
-        }
-    }
-    else {
-        for (let i = 0; i < data.users.length; i++) {
-            if (data.users[i].active === true) {
-                const userCup = (data.users[i].weight * 30) / 6;
-                text = `${data.users[i].name}, нужно выпить ${userCup * 2} мл воды!`;
-                data.users[i].drankWater += userCup * 2;
-                writeJsonFile(data);
-                bot.sendMessage(data.users[i].id, text);
-            }
-        }
-    }
-}
-
-cron.schedule(`0 7 * * *`, async () => {
-    try {
-        await sendNotification(false);
-    } catch (error) {
-        console.error('Cron job failed:', error);
-    }
-}, { scheduled: true, timezone: 'Europe/Moscow' });
-
-cron.schedule(`0 9 * * *`, async () => {
-    try {
-        await sendNotification(false);
-    } catch (error) {
-        console.error('Cron job failed:', error);
-    }
-}, { scheduled: true, timezone: 'Europe/Moscow' });
-
-cron.schedule(`0 11 * * *`, async () => {
-    try {
-        await sendNotification(true);
-    } catch (error) {
-        console.error('Cron job failed:', error);
-    }
-}, { scheduled: true, timezone: 'Europe/Moscow' });
-
-cron.schedule(`0 14 * * *`, async () => {
-    try {
-        await sendNotification(false);
-    } catch (error) {
-        console.error('Cron job failed:', error);
-    }
-}, { scheduled: true, timezone: 'Europe/Moscow' });
-
-cron.schedule(`0 18 * * *`, async () => {
-    try {
-        await sendNotification(false);
-    } catch (error) {
-        console.error('Cron job failed:', error);
-    }
-}, { scheduled: true, timezone: 'Europe/Moscow' });
-
+server();
+cron(bot);
 
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
@@ -188,27 +126,3 @@ bot.on('message', (msg) => {
             }
     }
 });
-
-if (process.env.IS_TEST === 'true') {
-    console.log('Работает тестовый слой бота запрос на сервер не совершаем...');
-}
-else {
-    console.log('Работает продовский слой бота запросы на сервер совершаем...');
-    app.use('/', route);
-
-    cron.schedule(`*/2 * * * *`, async () => {
-        console.log('Запрашиваю пинг сервера...');
-        try {
-            const response = await axios.get(`${process.env.HOST}/ping`);
-            console.log('Ответ:', response.data);
-        } catch (error) {
-            console.error('Cron job failed:', error.message);
-            console.error('Stack trace:', error.stack);
-        }
-    });
-
-    const PORT = process.env.PORT || 5001;
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
-    });
-}
