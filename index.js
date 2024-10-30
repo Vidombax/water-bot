@@ -40,7 +40,7 @@ function sendNotification(isDoubleBottle) {
     }
 }
 
-cron.schedule(`30 6 * * *`, async () => {
+cron.schedule(`0 7 * * *`, async () => {
     try {
         await sendNotification(false);
     } catch (error) {
@@ -141,7 +141,7 @@ bot.on('message', (msg) => {
         case '/about':
             bot.sendMessage(chatId, 'Данный бот отправляет уведомление о нужде выпить воды по такому расписанию:' +
                 '\n' +
-                ' 8:30' +
+                ' 9:00' +
                 '\n' +
                 '11:00' +
                 '\n' +
@@ -171,32 +171,44 @@ bot.on('message', (msg) => {
             }
             break;
         case '/water':
-            for (let i = 0; i < data.users.length; i++) {
-                if (chatId === data.users[i].id) {
-                    bot.sendMessage(chatId, `Вы выпили ${data.users[i].drankWater} мл воды`);
+            if (data.users.length > 0) {
+                for (let i = 0; i < data.users.length; i++) {
+                    if (chatId === data.users[i].id) {
+                        bot.sendMessage(chatId, `Вы выпили ${data.users[i].drankWater} мл воды`);
+                        break;
+                    }
+                    else {
+                        bot.sendMessage(chatId, 'Вы не зарегистрированы в боте: чтобы это сделать выберите команду start в списке!');
+                    }
                 }
-                else {
-                    bot.sendMessage(chatId, 'Вы не зарегистрированы в боте: чтобы это сделать выберите команду start в списке!');
-                }
+                break;
             }
-            break;
+            else {
+                console.error('База данных пустая! нужен хелп разраба');
+            }
     }
 });
 
-app.use('/', route);
+if (process.env.IS_TEST === 'true') {
+    console.log('Работает тестовый слой бота запрос на сервер не совершаем...');
+}
+else {
+    console.log('Работает продовский слой бота запросы на сервер совершаем...');
+    app.use('/', route);
 
-cron.schedule(`*/2 * * * *`, async () => {
-    console.log('Запрашиваю пинг сервера...');
-    try {
-        const response = await axios.get(`${process.env.HOST}/ping`);
-        console.log('Ответ:', response.data);
-    } catch (error) {
-        console.error('Cron job failed:', error.message);
-        console.error('Stack trace:', error.stack);
-    }
-});
+    cron.schedule(`*/2 * * * *`, async () => {
+        console.log('Запрашиваю пинг сервера...');
+        try {
+            const response = await axios.get(`${process.env.HOST}/ping`);
+            console.log('Ответ:', response.data);
+        } catch (error) {
+            console.error('Cron job failed:', error.message);
+            console.error('Stack trace:', error.stack);
+        }
+    });
 
-const PORT = process.env.PORT || 5001
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`)
-})
+    const PORT = process.env.PORT || 5001;
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
