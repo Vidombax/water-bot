@@ -1,6 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 require('dotenv').config();
-const { addUser, writeJsonFile, createUsersFile } = require('./commands');
+const { addUser, createUsersFile } = require('./commands');
 const server = require('./server.js');
 const cron = require('./cron.js');
 const {getUsers, updateActivity} = require('./store_user.js');
@@ -111,39 +111,49 @@ bot.on('message', (msg) => {
                 '20:00');
             break;
         case '/refuse':
-            let found = false;
-            for (let i = 0; i < data.users.length; i++) {
-                if (chatId === data.users[i].id) {
-                    if (data.users[i].active === true) {
-                        data.users[i].active = false;
-                        writeJsonFile(data);
-                        bot.sendMessage(chatId, 'Бот больше не будет отправлять вам сообщения');
-                    } else {
-                        bot.sendMessage(chatId, 'Бот не включен у вас');
-                    }
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                bot.sendMessage(chatId, 'Пользователь не найден');
-            }
-            break;
-        case '/water':
-            if (data.users.length > 0) {
-                for (let i = 0; i < data.users.length; i++) {
-                    if (chatId === data.users[i].id) {
-                        bot.sendMessage(chatId, `Вы выпили ${data.users[i].drankWater} мл воды`);
+            (async () => {
+                users = await getUsers(users);
+            })().finally(() => {
+                let found = false;
+                for (let i = 0; i < users.length; i++) {
+                    if (chatId === users[i].id_telegram) {
+                        if (users[i].active === true) {
+                            (async () => {
+                                await updateActivity(chatId, false);
+                            })();
+                            bot.sendMessage(chatId, 'Бот больше не будет отправлять вам сообщения');
+                        } else {
+                            bot.sendMessage(chatId, 'Бот не включен у вас');
+                        }
+                        found = true;
                         break;
                     }
-                    else {
-                        bot.sendMessage(chatId, 'Вы не зарегистрированы в боте: чтобы это сделать выберите команду start в списке!');
+                }
+                if (!found) {
+                    bot.sendMessage(chatId, 'Пользователь не найден');
+                }
+            });
+            break;
+        case '/water':
+            (async () => {
+                users = await getUsers(users);
+            })().finally(() => {
+                if (users.length > 0) {
+                    for (let i = 0; i < users.length; i++) {
+                        if (chatId === users[i].id_telegram) {
+                            if (users[i].active === true) {
+                                bot.sendMessage(chatId, `Вы выпили ${users[i].drankWater} мл воды`);
+                                break;
+                            }
+                            else {
+                                bot.sendMessage(chatId, 'Вы не зарегистрированы в боте: чтобы это сделать выберите команду start в списке!');
+                            }
+                        }
                     }
                 }
-                break;
-            }
-            else {
-                console.error('База данных пустая! нужен хелп разраба');
-            }
+                else {
+                    console.error('База данных пустая! нужен хелп разраба');
+                }
+            });
     }
 });
