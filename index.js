@@ -1,9 +1,9 @@
 const TelegramBot = require('node-telegram-bot-api');
 require('dotenv').config();
-const { addUser, createUsersFile } = require('./commands');
+const {createUsersFile } = require('./commands');
 const server = require('./server.js');
 const cron = require('./cron.js');
-const {getUsers, updateActivity} = require('./store_user.js');
+const {getUsers, updateActivity, addUser} = require('./store_user.js');
 
 let token;
 
@@ -81,17 +81,22 @@ bot.on('message', (msg) => {
                                 return;
                             }
 
-                            const newUser = {
-                                id: msg.chat.id,
-                                name: msg.chat.first_name,
-                                height: height,
-                                weight: weight,
-                                drankWater: 0,
-                                active: true,
-                            };
-                            addUser(newUser);
-                            bot.sendMessage(chatId, `Человеку необходимо пить 30 мл жидкости на 1 кг массы тела, следовательно учитывая ваш вес вы должны пить: ${30 * newUser.weight} мл в день или же ${(30 * newUser.weight) / 1000} л в день.`);
-                            bot.sendMessage(chatId, 'Бот будет отправлять в течении дня напоминания о том, что вам нужно выпить воды, чтобы вы смогли достичь своей суточной нормы жидкости в организме!');
+                            let newUser = {};
+
+                            (async () => {
+                                newUser = {
+                                    idTelegram: msg.chat.id,
+                                    name: msg.chat.first_name,
+                                    height: height,
+                                    weight: weight,
+                                    drankWater: 0,
+                                };
+
+                                await addUser(newUser);
+                            })().finally(() => {
+                                bot.sendMessage(chatId, `Человеку необходимо пить 30 мл жидкости на 1 кг массы тела, следовательно учитывая ваш вес вы должны пить: ${30 * newUser.weight} мл в день или же ${(30 * newUser.weight) / 1000} л в день.`);
+                                bot.sendMessage(chatId, 'Бот будет отправлять в течении дня напоминания о том, что вам нужно выпить воды, чтобы вы смогли достичь своей суточной нормы жидкости в организме!');
+                            });
                         });
                     });
                 }
