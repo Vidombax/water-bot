@@ -37,21 +37,22 @@ class Controller {
         }
         else {
             const idTelegram = req.body.idTelegram;
+            const isStartCommand = req.body.isStartCommand;
             const getUser = await db.query('SELECT * from users_bot WHERE id_telegram = $1', [idTelegram]);
             if (getUser) {
-                if (getUser.active !== true) {
-                    const updateActivity = await db.query('UPDATE users_bot SET active = false WHERE id_telegram = $1  RETURNING *', [idTelegram]);
+                if (isStartCommand !== false) {
+                    const updateActivity = await db.query('UPDATE users_bot SET active = true WHERE id_telegram = $1 RETURNING *', [idTelegram]);
                     if (updateActivity) {
-                        res.send('update active');
+                        res.send(`update active to true from id: ${updateActivity.rows[0].id}`);
                     }
                     else {
                         console.error('Не смогли обновить статус активности');
                     }
                 }
                 else {
-                    const updateActivity = await db.query('UPDATE users_bot SET active = true WHERE id_telegram = $1 RETURNING *', [idTelegram]);
+                    const updateActivity = await db.query('UPDATE users_bot SET active = false WHERE id_telegram = $1 RETURNING *', [idTelegram]);
                     if (updateActivity) {
-                        res.send('update active');
+                        res.send(`update active to false from id: ${updateActivity.rows[0].id}`);
                     }
                     else {
                         console.error('Не смогли обновить статус активности');

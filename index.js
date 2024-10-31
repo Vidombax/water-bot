@@ -3,7 +3,7 @@ require('dotenv').config();
 const { addUser, writeJsonFile, createUsersFile } = require('./commands');
 const server = require('./server.js');
 const cron = require('./cron.js');
-const {getUsers} = require('./store_user.js');
+const {getUsers, updateActivity} = require('./store_user.js');
 
 let token;
 
@@ -23,63 +23,79 @@ cron(bot);
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text;
-    const users = [];
-
+    let users = [];
 
     switch (text) {
         case '/start':
             let userFound = false;
 
             (async () => {
-                await getUsers(users);
-            })();
-
-            for (let i = 0; i < users.length; i++) {
-                if (users[i].id_telegram === chatId) {
-                    if (users[i].active === true) {
-                        bot.sendMessage(chatId, 'Вы уже зарегистрированы!');
-                        userFound = true;
-                        break;
-                    }
-                    else {
-
-                        bot.sendMessage(chatId, 'С возвращением!');
-                        userFound = true;
+                users = await getUsers(users);
+            })().finally(() => {
+                if (users.length > 1) {
+                    for (let i = 0; i < users.length; i++) {
+                        if (users[i].id_telegram === chatId) {
+                            if (users[i].active === true) {
+                                bot.sendMessage(chatId, 'Вы уже зарегистрированы!');
+                                userFound = true;
+                                break;
+                            }
+                            else {
+                                (async () => {
+                                    await updateActivity(chatId, true);
+                                })();
+                                bot.sendMessage(chatId, 'С возвращением!');
+                                userFound = true;
+                            }
+                        }
                     }
                 }
-            }
+                else {
+                    if (users[0].id_telegram === chatId) {
+                        if (users[0].active === true) {
+                            bot.sendMessage(chatId, 'Вы уже зарегистрированы!');
+                            userFound = true;
+                        }
+                        else {
 
-            if (!userFound) {
-                bot.sendMessage(chatId, 'Добро пожаловать! Пожалуйста, укажите ваш рост в см:');
-                bot.once('message', (msg) => {
-                    const height = parseInt(msg.text);
-                    if (isNaN(height)) {
-                        bot.sendMessage(chatId, 'Пожалуйста, введите числовое значение для роста.');
-                        return;
+                            bot.sendMessage(chatId, 'С возвращением!');
+                            userFound = true;
+                        }
                     }
+                }
 
-                    bot.sendMessage(chatId, 'Спасибо! Теперь укажите ваш вес в кг:');
+                if (!userFound) {
+                    bot.sendMessage(chatId, 'Добро пожаловать! Пожалуйста, укажите ваш рост в см:');
                     bot.once('message', (msg) => {
-                        const weight = parseInt(msg.text);
-                        if (isNaN(weight)) {
-                            bot.sendMessage(chatId, 'Пожалуйста, введите числовое значение для веса.');
+                        const height = parseInt(msg.text);
+                        if (isNaN(height)) {
+                            bot.sendMessage(chatId, 'Пожалуйста, введите числовое значение для роста.');
                             return;
                         }
 
-                        const newUser = {
-                            id: msg.chat.id,
-                            name: msg.chat.first_name,
-                            height: height,
-                            weight: weight,
-                            drankWater: 0,
-                            active: true,
-                        };
-                        addUser(newUser);
-                        bot.sendMessage(chatId, `Человеку необходимо пить 30 мл жидкости на 1 кг массы тела, следовательно учитывая ваш вес вы должны пить: ${30 * newUser.weight} мл в день или же ${(30 * newUser.weight) / 1000} л в день.`);
-                        bot.sendMessage(chatId, 'Бот будет отправлять в течении дня напоминания о том, что вам нужно выпить воды, чтобы вы смогли достичь своей суточной нормы жидкости в организме!');
+                        bot.sendMessage(chatId, 'Спасибо! Теперь укажите ваш вес в кг:');
+                        bot.once('message', (msg) => {
+                            const weight = parseInt(msg.text);
+                            if (isNaN(weight)) {
+                                bot.sendMessage(chatId, 'Пожалуйста, введите числовое значение для веса.');
+                                return;
+                            }
+
+                            const newUser = {
+                                id: msg.chat.id,
+                                name: msg.chat.first_name,
+                                height: height,
+                                weight: weight,
+                                drankWater: 0,
+                                active: true,
+                            };
+                            addUser(newUser);
+                            bot.sendMessage(chatId, `Человеку необходимо пить 30 мл жидкости на 1 кг массы тела, следовательно учитывая ваш вес вы должны пить: ${30 * newUser.weight} мл в день или же ${(30 * newUser.weight) / 1000} л в день.`);
+                            bot.sendMessage(chatId, 'Бот будет отправлять в течении дня напоминания о том, что вам нужно выпить воды, чтобы вы смогли достичь своей суточной нормы жидкости в организме!');
+                        });
                     });
-                });
-            }
+                }
+            });
             break;
         case '/about':
             bot.sendMessage(chatId, 'Данный бот отправляет уведомление о нужде выпить воды по такому расписанию:' +

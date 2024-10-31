@@ -6,6 +6,7 @@ const express = require("express");
 module.exports = () => {
     const app = express();
 
+    app.use(express.json());
     app.use('/', route);
     const PORT = process.env.PORT || 5001;
 

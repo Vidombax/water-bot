@@ -1,11 +1,31 @@
 const axios = require("axios");
 
-const getUsers = async (users) => {
+const getUsers = async () => {
     const response = await axios.get(`${process.env.HOST}/users`);
-    users.push(response.data);
-    console.log(`Количество найденных пользователей: ${users.length}`);
+    console.log(`Количество найденных пользователей: ${response.data.length}`);
+    return response.data;
+}
+
+const updateActivity = async (idTelegram, isStartCommand) => {
+    if (isStartCommand === true) {
+        const response = await axios.put(`${process.env.HOST}/user`, {
+            "isWaterAdding": false,
+            "idTelegram": idTelegram,
+            "isStartCommand": true
+        });
+        return console.log(response.data);
+    }
+    else {
+        const response = await axios.put(`${process.env.HOST}/user`, {
+            "isWaterAdding": false,
+            "idTelegram": idTelegram,
+            "isStartCommand": false
+        });
+        return console.log(response.data);
+    }
 }
 
 module.exports = {
-    getUsers
+    getUsers,
+    updateActivity
 }
