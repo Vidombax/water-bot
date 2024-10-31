@@ -1,8 +1,9 @@
 const TelegramBot = require('node-telegram-bot-api');
 require('dotenv').config();
-const { addUser, readJsonFile, writeJsonFile, createUsersFile } = require('./commands');
+const { addUser, writeJsonFile, createUsersFile } = require('./commands');
 const server = require('./server.js');
 const cron = require('./cron.js');
+const {getUsers} = require('./store_user.js');
 
 let token;
 
@@ -22,22 +23,26 @@ cron(bot);
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
     const text = msg.text;
-    const data = readJsonFile();
+    const users = [];
+
 
     switch (text) {
         case '/start':
             let userFound = false;
 
-            for (let i = 0; i < data.users.length; i++) {
-                if (data.users[i].id === chatId) {
-                    if (data.users[i].active === true) {
+            (async () => {
+                await getUsers(users);
+            })();
+
+            for (let i = 0; i < users.length; i++) {
+                if (users[i].id_telegram === chatId) {
+                    if (users[i].active === true) {
                         bot.sendMessage(chatId, 'Вы уже зарегистрированы!');
                         userFound = true;
                         break;
                     }
                     else {
-                        data.users[i].active = true;
-                        writeJsonFile(data);
+
                         bot.sendMessage(chatId, 'С возвращением!');
                         userFound = true;
                     }
