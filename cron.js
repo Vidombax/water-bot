@@ -55,7 +55,7 @@ module.exports = (bot) => {
         });
     }
 
-    cron.schedule(`41 7 * * *`, async () => {
+    cron.schedule(`0 7 * * *`, async () => {
         try {
             await sendNotification(false, '9:00');
         } catch (error) {
