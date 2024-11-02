@@ -1,6 +1,5 @@
 const TelegramBot = require('node-telegram-bot-api');
 require('dotenv').config();
-const {createUsersFile } = require('./commands');
 const server = require('./server.js');
 const cron = require('./cron.js');
 const {getUsers, updateActivity, addUser} = require('./store_user.js');
@@ -16,7 +15,6 @@ else {
 
 const bot = new TelegramBot(token, {polling: true});
 
-createUsersFile();
 server();
 cron(bot);
 
