@@ -30,7 +30,12 @@ bot.on('message', (msg) => {
             let userFound = false;
 
             (async () => {
-                users = await getUsers(users);
+                try {
+                    users = await getUsers(users);
+                }
+                catch (e) {
+                    console.error(e);
+                }
             })().finally(() => {
                 if (users.length > 1) {
                     for (let i = 0; i < users.length; i++) {
@@ -42,7 +47,12 @@ bot.on('message', (msg) => {
                             }
                             else {
                                 (async () => {
-                                    await updateActivity(chatId, true);
+                                    try {
+                                        await updateActivity(chatId, true);
+                                    }
+                                    catch (e) {
+                                        console.error(e);
+                                    }
                                 })();
                                 bot.sendMessage(chatId, 'С возвращением!');
                                 userFound = true;
@@ -105,7 +115,7 @@ bot.on('message', (msg) => {
         case '/about':
             bot.sendMessage(chatId, 'Данный бот отправляет уведомление о нужде выпить воды по такому расписанию:' +
                 '\n' +
-                ' 9:00' +
+                '9:00' +
                 '\n' +
                 '11:00' +
                 '\n' +
@@ -117,14 +127,24 @@ bot.on('message', (msg) => {
             break;
         case '/refuse':
             (async () => {
-                users = await getUsers(users);
+                try {
+                    users = await getUsers(users);
+                }
+                catch (e) {
+                    console.error(e);
+                }
             })().finally(() => {
                 let found = false;
                 for (let i = 0; i < users.length; i++) {
                     if (chatId === users[i].id_telegram) {
                         if (users[i].active === true) {
                             (async () => {
-                                await updateActivity(chatId, false);
+                                try {
+                                    await updateActivity(chatId, false);
+                                }
+                                catch (e) {
+                                    console.error(e);
+                                }
                             })();
                             bot.sendMessage(chatId, 'Бот больше не будет отправлять вам сообщения');
                         } else {
@@ -141,13 +161,18 @@ bot.on('message', (msg) => {
             break;
         case '/water':
             (async () => {
-                users = await getUsers(users);
+                try {
+                    users = await getUsers(users);
+                }
+                catch (e) {
+                    console.error(e);
+                }
             })().finally(() => {
                 if (users.length > 0) {
                     for (let i = 0; i < users.length; i++) {
                         if (chatId === users[i].id_telegram) {
                             if (users[i].active === true) {
-                                bot.sendMessage(chatId, `Вы выпили ${users[i].drankWater} мл воды`);
+                                bot.sendMessage(chatId, `Вы выпили ${users[i].drank_water} мл воды`);
                                 break;
                             }
                             else {

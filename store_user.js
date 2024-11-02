@@ -35,6 +35,20 @@ const updateActivity = async (idTelegram, isStartCommand) => {
     }
 }
 
+const updateWaterData = async (idTelegram, userCup) => {
+    try {
+        const response = await axios.put(`${process.env.HOST}/user`, {
+            "isWaterAdding": true,
+            "idTelegram": idTelegram,
+            "userCup": userCup
+        });
+        return console.log(response.data);
+    }
+    catch (e) {
+        console.error(e);
+    }
+}
+
 const addUser = async (newUser) => {
     try {
         const response = await axios.post(`${process.env.HOST}/user`, {
@@ -54,5 +68,6 @@ const addUser = async (newUser) => {
 module.exports = {
     getUsers,
     updateActivity,
-    addUser
+    addUser,
+    updateWaterData
 }

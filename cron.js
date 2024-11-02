@@ -1,37 +1,63 @@
-const {readJsonFile, writeJsonFile} = require("./commands");
+const {getUsers, updateWaterData} = require('./store_user.js');
 const cron = require("node-cron");
 
 module.exports = (bot) => {
-    function sendNotification(isDoubleBottle) {
-        const data = readJsonFile();
+    function sendNotification(isDoubleBottle, whatTime) {
+        console.log(`Начинаю cron: ${whatTime}`);
+        let users = [];
         let text = '';
-        if (isDoubleBottle !== true) {
-            for (let i = 0; i < data.users.length; i++) {
-                if (data.users[i].active === true) {
-                    const userCup = (data.users[i].weight * 30) / 6;
-                    text = `${data.users[i].name}, нужно выпить ${userCup} мл воды!`;
-                    data.users[i].drankWater += userCup;
-                    writeJsonFile(data);
-                    bot.sendMessage(data.users[i].id, text);
-                }
+        (async () => {
+            try {
+                users = await getUsers(users);
             }
-        }
-        else {
-            for (let i = 0; i < data.users.length; i++) {
-                if (data.users[i].active === true) {
-                    const userCup = (data.users[i].weight * 30) / 6;
-                    text = `${data.users[i].name}, нужно выпить ${userCup * 2} мл воды!`;
-                    data.users[i].drankWater += userCup * 2;
-                    writeJsonFile(data);
-                    bot.sendMessage(data.users[i].id, text);
-                }
+            catch (e) {
+                console.error(e);
             }
-        }
+        })().finally(() => {
+            if (isDoubleBottle !== true) {
+                for (let i = 0; i < users.length; i++) {
+                    if (users[i].active === true) {
+                        const userCup = (users[i].weight * 30) / 6;
+                        text = `${users[i].name}, нужно выпить ${userCup} мл воды!`;
+                        (async () => {
+                            try {
+                                await updateWaterData(users[i].id_telegram, userCup);
+                            }
+                            catch (e) {
+                                console.error(e);
+                            }
+                        })();
+
+                        bot.sendMessage(users[i].id_telegram, text);
+                    }
+                }
+                console.log(`Cron: ${whatTime} завершен`);
+            }
+            else {
+                for (let i = 0; i < users.length; i++) {
+                    if (users[i].active === true) {
+                        const userCup = (users[i].weight * 30) / 6;
+                        text = `${users[i].name}, нужно выпить ${userCup * 2} мл воды!`;
+                        (async () => {
+                            try {
+                                await updateWaterData(users[i].id_telegram, userCup * 2);
+                            }
+                            catch (e) {
+                                console.error(e);
+                            }
+                        })();
+
+                        bot.sendMessage(users[i].id_telegram, text);
+                    }
+                }
+                console.log(`Cron: ${whatTime} завершен`);
+            }
+        });
     }
 
-    cron.schedule(`55 15 * * *`, async () => {
+    cron.schedule(`41 7 * * *`, async () => {
         try {
-            await sendNotification(false);
+            await sendNotification(false, '9:00');
         } catch (error) {
             console.error('Cron job failed:', error);
         }
@@ -39,7 +65,7 @@ module.exports = (bot) => {
 
     cron.schedule(`0 9 * * *`, async () => {
         try {
-            await sendNotification(false);
+            await sendNotification(false, '11:00');
         } catch (error) {
             console.error('Cron job failed:', error);
         }
@@ -47,7 +73,7 @@ module.exports = (bot) => {
 
     cron.schedule(`0 11 * * *`, async () => {
         try {
-            await sendNotification(true);
+            await sendNotification(true, '13:00');
         } catch (error) {
             console.error('Cron job failed:', error);
         }
@@ -55,7 +81,7 @@ module.exports = (bot) => {
 
     cron.schedule(`0 14 * * *`, async () => {
         try {
-            await sendNotification(false);
+            await sendNotification(false, '16:00');
         } catch (error) {
             console.error('Cron job failed:', error);
         }
@@ -63,7 +89,7 @@ module.exports = (bot) => {
 
     cron.schedule(`0 18 * * *`, async () => {
         try {
-            await sendNotification(false);
+            await sendNotification(false, '20:00');
         } catch (error) {
             console.error('Cron job failed:', error);
         }
